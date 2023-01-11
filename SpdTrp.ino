@@ -1,6 +1,8 @@
-// model RR speed trap
+const char *Version = "Model RR speed trap - 230111b";
 
+#include "pcRead.h"
 #include "seg7disp.h"
+#include "spdTrp.h"
 
 const byte PinSensor [] = { A1, A2 };
 const unsigned Nsensor = sizeof(PinSensor);
@@ -8,8 +10,10 @@ const unsigned Nsensor = sizeof(PinSensor);
 unsigned long msecLst;
 unsigned long msec;
 
+int   scale       = 87;
+float distX10Inch = 100;
 
-char s [80];
+char s [SizeS];
 char t [20];
 
 // -----------------------------------------------------------------------------
@@ -21,15 +25,16 @@ char t [20];
 float mph_msec = 1.0;
 
 void
-setConversion (
-    float   trapDistInch,
-    int     scale )
+setConversion (void)
 {
-    mph_msec = 1000 * trapDistInch / ((12.0 * 5280 / 3600) / scale);
+    scale       = eeRead16 (EE_Scale);
+    distX10Inch = eeRead16 (EE_Dist);
+
+    mph_msec = 1000 * (distX10Inch /10.0) / ((12.0 * 5280 / 3600) / scale);
 
     dtostrf (mph_msec, 6, 2, t);
     sprintf (s, "%s: %d in, %d scale, %s mph_msec",
-        __func__, (int)trapDistInch, scale, t);
+        __func__, (int)distX10Inch, scale, t);
     Serial.println (s);
 }
 
@@ -41,13 +46,15 @@ int pinTrap = None;
 void
 trap (void)
 {
+    // turn off display
     if (Disp == pinTrap)  {
-        if (msec - msecLst > 2000)  {
+        if (msec - msecLst > 5000)  {
             seg7off ();
             pinTrap = None;
-            Serial.print (" rdy ");
         }
     }
+
+    // capture timestamp & turnoff display
     else if (None == pinTrap)  {
         for (unsigned n = 0; n < Nsensor; n++)  {
             if (LOW == digitalRead (PinSensor [n]))  {
@@ -57,12 +64,14 @@ trap (void)
             }
         }
     }
+
+    // capture exit time & compute/display speed
     else if (LOW == digitalRead (PinSensor [pinTrap]))  {
         unsigned long msecTime = msec - msecLst;
         float         mphX10   = 10 * mph_msec / msecTime;
         seg7disp ((int)mphX10);
 
-        dtostrf (mphX10, 6, 2, t);
+        dtostrf (mphX10 / 10.0, 6, 2, t);
         sprintf (s, " %8ld msec, %s mph", msecTime, t);
         Serial.println (s);
 
@@ -77,6 +86,7 @@ loop (void)
 {
     msec = millis ();
     trap ();
+    pcRead ();
 }
 
 // ---------------------------------------------------------
@@ -84,9 +94,10 @@ void
 setup (void)
 {
     Serial.begin (9600);
-    seg7init ();
+    Serial.println (Version);
 
-    setConversion (10.0, 87);
+    seg7init ();
+    setConversion ();
 
     for (unsigned n = 0; n < Nsensor; n++)
         pinMode (PinSensor [n], INPUT_PULLUP);

@@ -2,6 +2,9 @@
 
 #include <TimerOne.h>
 
+#include "seg7disp.h"
+#include "spdTrp.h"
+
 // -------------------------------------
 //  constants for multiplexed 7-segment display
 #define Latch   4
@@ -72,12 +75,19 @@ void seg7disp (
     i = 0;
     while (SEGMENT_MAP_DIGIT [0] == disp [i])
         disp [i++] = SEGMENT_OFF;
+
+    for (i = N_DISP-1; i >= 0; i--)  {
+        sprintf (s, " %02x", disp [i]);
+        Serial.print (s);
+    }
+    Serial.println ();
 }
 
 // -----------------------------------------------------------------------------
 // update the value of each digit
 void seg7off (void)
 {
+    Serial.println (__func__);
     for (int i = N_DISP-1; i >= 0; i--)
         disp [i] = SEGMENT_OFF;
 }
