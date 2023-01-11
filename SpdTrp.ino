@@ -1,4 +1,4 @@
-const char *Version = "Model RR speed trap - 230111c";
+const char *Version = "Model RR speed trap - 230111d";
 
 #include "pcRead.h"
 #include "seg7disp.h"
@@ -120,4 +120,11 @@ setup (void)
 
     for (unsigned n = 0; n < Nsensor; n++)
         pinMode (PinSensor [n], INPUT_PULLUP);
+
+    for (int i = 5; i >= 0; i--)  {
+        seg7on ();
+        delay (250);
+        seg7off ();
+        delay (250);
+    }
 }

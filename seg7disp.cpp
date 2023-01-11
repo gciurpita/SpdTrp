@@ -92,6 +92,13 @@ void seg7off (void)
         disp [i] = SEGMENT_OFF;
 }
 
+void seg7on (void)
+{
+    Serial.println (__func__);
+    for (int i = N_DISP-1; i >= 0; i--)
+        disp [i] = 0;
+}
+
 // -----------------------------------------------------------------------------
 void seg7init (void)
 {
