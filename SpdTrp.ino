@@ -1,4 +1,4 @@
-const char *Version = "Model RR speed trap - 230111b";
+const char *Version = "Model RR speed trap - 230111c";
 
 #include "pcRead.h"
 #include "seg7disp.h"
@@ -7,8 +7,10 @@ const char *Version = "Model RR speed trap - 230111b";
 const byte PinSensor [] = { A1, A2 };
 const unsigned Nsensor = sizeof(PinSensor);
 
+const unsigned long WaitPeriod = 3000;
 unsigned long msecLst;
 unsigned long msec;
+unsigned long msec0;
 
 int   scale       = 87;
 float distX10Inch = 100;
@@ -38,45 +40,63 @@ setConversion (void)
     Serial.println (s);
 }
 
+// -------------------------------------
+void
+dispSpd (
+    unsigned long msecTime )
+{
+    float         mphX10   = 10 * mph_msec / msecTime;
+    seg7disp ((int)mphX10);
+
+    dtostrf (mphX10 / 10.0, 6, 2, t);
+    sprintf (s, " %8ld msec, %s mph", msecTime, t);
+    Serial.println (s);
+}
+
 // ---------------------------------------------------------
-enum { None = -1, Disp = -2 };
-int pinTrap = None;
+enum { Idle, Trig, Fouled, Wait };
+int state = Idle;
+
+unsigned pinTrap;
 
 // -------------------------------------
 void
 trap (void)
 {
-    // turn off display
-    if (Disp == pinTrap)  {
-        if (msec - msecLst > 5000)  {
+    // check inputs, return Nsensor if none active
+    unsigned  pin;
+    for (pin = 0; pin < Nsensor; pin++)  {
+        if (LOW == digitalRead (PinSensor [pin]))  {
+            break;
+        }
+    }
+
+    // ---------------------------
+    msec = millis ();
+
+    switch (state) {
+    case Idle:                  // check for trains entering trap
+        if (Nsensor > pin)  {
+            pinTrap = Nsensor - 1 - pin;
+            msecLst = msec;
+            state   = Trig;
+        }
+        break;
+
+    case Trig:                  // check for train exiting
+        if (pinTrap == pin)  {
+            dispSpd (msec - msecLst);
+            state = Wait;
+        }
+        break;
+
+    case Wait:
+        if (Nsensor != pin)     // check for cars crossing trap
+            msecLst    = msec;
+        else if (msec - msecLst >= WaitPeriod)  {   // timer
+            state      = Idle;
             seg7off ();
-            pinTrap = None;
         }
-    }
-
-    // capture timestamp & turnoff display
-    else if (None == pinTrap)  {
-        for (unsigned n = 0; n < Nsensor; n++)  {
-            if (LOW == digitalRead (PinSensor [n]))  {
-                msecLst = msec;
-                pinTrap = Nsensor - n - 1;
-                break;
-            }
-        }
-    }
-
-    // capture exit time & compute/display speed
-    else if (LOW == digitalRead (PinSensor [pinTrap]))  {
-        unsigned long msecTime = msec - msecLst;
-        float         mphX10   = 10 * mph_msec / msecTime;
-        seg7disp ((int)mphX10);
-
-        dtostrf (mphX10 / 10.0, 6, 2, t);
-        sprintf (s, " %8ld msec, %s mph", msecTime, t);
-        Serial.println (s);
-
-        msecLst = msec;
-        pinTrap = Disp;
     }
 }
 
@@ -84,7 +104,6 @@ trap (void)
 void
 loop (void)
 {
-    msec = millis ();
     trap ();
     pcRead ();
 }
