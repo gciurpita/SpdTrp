@@ -10,6 +10,7 @@ unsigned long msec;
 
 
 char s [80];
+char t [20];
 
 // -----------------------------------------------------------------------------
 //     1 mph       = 17.6 in/sec   12 * 5280 / 3600
@@ -21,9 +22,15 @@ float mph_msec = 1.0;
 
 void
 setConversion (
-    float   trapDistInches )
+    float   trapDistInch,
+    int     scale )
 {
-    mph_msec = 1000 * trapDistInches / ((12.0 * 5280 / 3600) / 87);
+    mph_msec = 1000 * trapDistInch / ((12.0 * 5280 / 3600) / scale);
+
+    dtostrf (mph_msec, 6, 2, t);
+    sprintf (s, "%s: %d in, %d scale, %s mph_msec",
+        __func__, (int)trapDistInch, scale, t);
+    Serial.println (s);
 }
 
 // ---------------------------------------------------------
@@ -38,7 +45,7 @@ trap (void)
         if (msec - msecLst > 2000)  {
             seg7off ();
             pinTrap = None;
-            Serial.println (" rdy");
+            Serial.print (" rdy ");
         }
     }
     else if (None == pinTrap)  {
@@ -55,13 +62,12 @@ trap (void)
         float         mphX10   = 10 * mph_msec / msecTime;
         seg7disp ((int)mphX10);
 
+        dtostrf (mphX10, 6, 2, t);
+        sprintf (s, " %8ld msec, %s mph", msecTime, t);
+        Serial.println (s);
+
         msecLst = msec;
         pinTrap = Disp;
-
-        char t [20];
-        dtostrf (mphX10, 6, 2, t);
-        sprintf (s, " %8ld %8ld %s", msecLst, msec, t);
-        Serial.println (s);
     }
 }
 
@@ -80,7 +86,7 @@ setup (void)
     Serial.begin (9600);
     seg7init ();
 
-    setConversion (10.0);
+    setConversion (10.0, 87);
 
     for (unsigned n = 0; n < Nsensor; n++)
         pinMode (PinSensor [n], INPUT_PULLUP);

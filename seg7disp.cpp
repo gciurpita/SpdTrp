@@ -24,6 +24,8 @@ const byte DISP_MAP [] = { 1, 2, 4, 8 };
 
 byte disp [N_DISP] = {SEGMENT_OFF, SEGMENT_OFF, SEGMENT_OFF, SEGMENT_OFF};
 
+int flag;
+
 // -----------------------------------------------------------------------------
 // shift 16-bits from data into the shift register
 void output (
@@ -61,8 +63,15 @@ void isr (void)
 void seg7disp (
     int  valX10 )
 {
-    for (int i = N_DISP-1; i >= 0; i--, valX10 /= 10)
+    int i;
+    for (i = N_DISP-1; i >= 0; i--, valX10 /= 10)
         disp [i] = SEGMENT_MAP_DIGIT [valX10 % 10];
+    disp [N_DISP-2] &= ~0x80;       // decimal pt
+
+    // blank leading zeros
+    i = 0;
+    while (SEGMENT_MAP_DIGIT [0] == disp [i])
+        disp [i++] = SEGMENT_OFF;
 }
 
 // -----------------------------------------------------------------------------
