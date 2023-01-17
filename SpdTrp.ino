@@ -1,4 +1,4 @@
-const char *Version = "Model RR speed trap - 230111d";
+const char *Version = "Model RR speed trap - 230117a";
 
 #include "pcRead.h"
 #include "seg7disp.h"
@@ -8,6 +8,7 @@ const byte PinSensor [] = { A1, A2 };
 const unsigned Nsensor = sizeof(PinSensor);
 
 const unsigned long WaitPeriod = 3000;
+const unsigned long TrigPeriod = 250;
 unsigned long msecLst;
 unsigned long msec;
 unsigned long msec0;
@@ -63,6 +64,8 @@ unsigned pinTrap;
 void
 trap (void)
 {
+    static byte dots;
+
     // check inputs, return Nsensor if none active
     unsigned  pin;
     for (pin = 0; pin < Nsensor; pin++)  {
@@ -78,15 +81,24 @@ trap (void)
     case Idle:                  // check for trains entering trap
         if (Nsensor > pin)  {
             pinTrap = Nsensor - 1 - pin;
-            msecLst = msec;
+            msec0   = msecLst = msec;
             state   = Trig;
+            dots    = 2;
         }
         break;
 
     case Trig:                  // check for train exiting
         if (pinTrap == pin)  {
-            dispSpd (msec - msecLst);
+            dispSpd (msec - msec0);
             state = Wait;
+        }
+        else if (msec - msecLst >= TrigPeriod)  {   // timer
+            msecLst = msec;
+            seg7dots (dots);
+            if (pinTrap)
+                dots = 1 == dots ? 8 : dots / 2;
+            else
+                dots = 8 == dots ? 1 : dots * 2;
         }
         break;
 

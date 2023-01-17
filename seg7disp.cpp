@@ -63,6 +63,15 @@ void isr (void)
 
 // -----------------------------------------------------------------------------
 // update the value of each digit
+void seg7dots (
+    int  val)
+{
+    for (int i = N_DISP-1; i >= 0; i--, val /= 2)
+        disp [i] = val & 1 ? ~0x80 : SEGMENT_OFF;
+}
+
+// -----------------------------------------------------------------------------
+// update the value of each digit
 void seg7disp (
     int  valX10 )
 {
