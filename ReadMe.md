@@ -1,19 +1,16 @@
-### Loco Speed Trap
+## Loco Speed Trap
 
 <img src=https://i5.walmartimages.com/asr/4b1a317d-14a7-4a60-bc2b-5391fe8575e4.7a4267827bfc80a2badfd102734ec542.jpeg height=300 align=right>
 
 A locomotive speed trap reports the speed in scale miles per hour
 with one decimal digit (e.g. 25.4).
-A relatively inexpensive multifunction shield having
-a four digit 7-segment display and electronics for driving it
-can be stripped of unnecessary parts and mounted in the fascia.
+A relatively inexpensive multi-function shield having
+a four digit 7-segment display and electronics for driving it.
 
 A variety of optical sensors can be used,
 preferably the reflective type mounted between track ties.
-They need to be soldered to the multifunction shield
+They need to be soldered to the multi-function shield
 since the shield plug into the connectors on the Arduino.
-
-A USB charger and cable can provide power.
 
 The distance between sensors and scale as a number (e.g. 87 for HO)
 can be stored in EEPROM to accommodate various installations.
@@ -27,7 +24,94 @@ when it exits the trap.
 It ignores further sensor activity as cars repeatedly trip sensors
 until neither sensor becomes active for several seconds.
 
-The code is composed of three main files and corresponding .h files.
+### Assembly
+The speed trap is composed of
+<ul>
+  <li> Arduino Uno
+  <li> <a href=https://www.mpja.com/download/hackatronics-arduino-multi-function-shield.pdf>Multi-function shield</a>
+stripped of unnecessary protruding parts.
+  <li> 2 IR sensors
+  <li> 2 3-pin headers (optional)
+  <li> 2 3-pin plugs (optional)
+  <li> USB-B cable
+  <li> USB wall charger
+</ul>
+
+Like any Arduino shield, the multi-function shield
+has pins that allow it to plug directly into a Arduino UNO.
+It has a four digit 7-segment display and shift register chips
+that provide an interface with a minimum of pins.
+It is designed for experimentation and
+contains a variety of components (e.g. sounder, pot, connectors)
+Once the protruding parts are unsoldered and removed from the board
+that unit can be fitted into a fascia opening to view the display.
+
+Several pins on the shield need to be trimmed to avoid touching
+the USB connector and electrical tape should be placed over
+the connector to further prevent contact. 
+
+Each IR sensor will require connections to
+power, ground and an input pin.
+There are a group of four 3-pin headers that provide
+5V, ground and access to pins 5, 6, 9 and A5
+<a href=https://3.bp.blogspot.com/-o_0BOfE9jzo/XDphpHo6gWI/AAAAAAAABhs/UxtNHctqj0c8qyl8ywKdWVWMJSgY16wwQCLcBGAs/s1600/Schematic.png> (see schematic).</a>
+It would be convenient to solder 3-pin servo female connectors
+(Gnd, 5V, out) to each IR sensor
+so that it can be directly connected to the shield header during testing
+and later to an extension when mounting on the layout
+
+The Arduino can be downloaded from github (see below) and
+programmed using the Arduino Integrated Development Environment
+<a href=https://docs.arduino.cc/software/ide-v1/tutorials/Windows>
+(download)</a>
+with just a USB-B cable connected between a PC and Arduino.
+
+<ul>
+ <li> plug the shield plugged into the Arduino,
+ <li> plug the IR sensors onto the shield headers 5 & 6,
+ <li> plug the USB cable into the shield and PC
+ <li> open the IDE, open the downloaded sketch and program the Arduino
+</ul>
+
+###  Configure & Testing
+The speed trap needs to be configured for the distance between
+the sensors and the scale.
+These values are stored in EEPROM and only need to be done once and
+can be changed at any time by plugging the USB cable into a laptop
+and entering commands using IDE serial monitor.
+
+The distance in inches is specified with the number followed by 'D'.
+"125D" would set the distance to 12.5 inches.
+Similarly, "87S" would set the scale for 1:87 or HO.
+Both 'd' and 's' can be entered to display the corresponding values.
+A '?' displays the short list of available commands.
+
+Once configured, the speed trap is running
+<ul>
+ <li> pass something across one of the sensors 
+ <li> pass something across the other sensor and the speed should be displayed
+ <li> after a few seconds the the display clears going dark.
+</ul>
+
+### Installation
+
+Unnecessary components on the multi-function shield will
+get in the way of mounting the Arduino behind the fascia of a layout.
+The headers, sounds, pot and  four switches can be unsoldered
+Capacitor C5 is a problem.
+Three conductor wires can be soldered to 3-pin plugs for the IR connectors
+and soldered to the backside of the shield where the 3-pin headers were.
+
+It is unfortunate that the USB cable plugs into the top of the Arduino.
+With the USB cable connected, the Arduino and shield can be mounted
+to the fascia.
+The sensor need to be connected and the USB cable
+connected to a USB wall charger. 
+
+### Description of Code
+The code is available for viewing or downloaded at
+[https://github.com/gciurpita/SpdTrp](https://github.com/gciurpita/SpdTrp)
+It code is composed of three main files and corresponding .h files.
 `pcRead.cpp` has three functions for reading and writing to the EEPROM:
 `eeRead16()`, `eeWrite16()` and `eeDisp()`.
 It also has `pcRead()` which monitors the serial interface to
@@ -81,12 +165,11 @@ waits for the trains to pass when there is no more sensor activity.
 `loops() calls `traps()` and `pcRead()`.
 `setup()` performs initialization,
 invoking `seg7init()`,
-calls `setConersion()`,
+calls `setConversion()`,
 configures the sensor pins and
 flashes all segments of the display to show all segments work.
 
-The code can be downloaded from
-[https://github.com/gciurpita/SpdTrp](https://github.com/gciurpita/SpdTrp)
+Of course you are encouraged to customize the code to your liking.
 
 <p align=right>
 Greg Ciurpita, Jan 2023
