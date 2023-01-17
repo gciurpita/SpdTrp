@@ -1,4 +1,4 @@
-const char *Version = "Model RR speed trap - 230117a";
+const char *Version = "Model RR speed trap - 230117c";
 
 #include "pcRead.h"
 #include "seg7disp.h"
@@ -47,7 +47,7 @@ dispSpd (
     unsigned long msecTime )
 {
     float         mphX10   = 10 * mph_msec / msecTime;
-    seg7disp ((int)mphX10);
+    seg7disp ((int)mphX10, 1);
 
     dtostrf (mphX10 / 10.0, 6, 2, t);
     sprintf (s, " %8ld msec, %s mph", msecTime, t);
@@ -94,7 +94,7 @@ trap (void)
         }
         else if (msec - msecLst >= TrigPeriod)  {   // timer
             msecLst = msec;
-            seg7dots (dots);
+            seg7segs (dots, SEGMENT_DEC);
             if (pinTrap)
                 dots = 1 == dots ? 8 : dots / 2;
             else
@@ -133,10 +133,14 @@ setup (void)
     for (unsigned n = 0; n < Nsensor; n++)
         pinMode (PinSensor [n], INPUT_PULLUP);
 
-    for (int i = 5; i >= 0; i--)  {
-        seg7on ();
+#if 0
+    for (int i = 1; i <= 0x80; i*=2)  {
+        Serial.println (i);
+        seg7segs (3, ~i);
         delay (250);
         seg7off ();
         delay (250);
     }
+#endif
+    seg7off ();
 }

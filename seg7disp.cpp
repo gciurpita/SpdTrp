@@ -15,12 +15,21 @@
 
 byte pins [] = { Latch, Clock, Data, LED0, LED1 };
 
+//    a      d
+//   f b    c e
+//    g      g
+//   e c    b f
+//    d h    a
+//
+//   h g f e d c b a
+
 const byte SEGMENT_MAP_DIGIT[] = {
-    0xC0, 0xF9, 0xA4, 0xB0, 0x99, 
-    0x92, 0x82, 0xF8, 0X80, 0X90
+    0xC0, 0xF9, 0xA4, 0xB0, 0x99, 0x92, 0x82, 0xF8, 0X80, 0X90
 };
-const byte SEGMENT_OFF = 0xFF;
-const byte SEGMENT_DEC = 0x80;
+
+const byte SEGMENT_MAP_DIGIT_F [] = {
+    0xC0, 0xCF, 0xA4, 0x86, 0x8B, 0x92, 0x90, 0xC7, 0x80, 0x82
+};
 
 const byte DISP_MAP [] = { 1, 2, 4, 8 };
 #define N_DISP  sizeof(DISP_MAP)
@@ -63,33 +72,42 @@ void isr (void)
 
 // -----------------------------------------------------------------------------
 // update the value of each digit
-void seg7dots (
-    int  val)
+void seg7segs (
+    int  val,
+    byte segs )
 {
     for (int i = N_DISP-1; i >= 0; i--, val /= 2)
-        disp [i] = val & 1 ? ~0x80 : SEGMENT_OFF;
+        disp [i] = val & 1 ? segs : SEGMENT_OFF;
 }
 
 // -----------------------------------------------------------------------------
 // update the value of each digit
 void seg7disp (
-    int  valX10 )
+    int  valX10,
+    int  flip )
 {
+    Serial.println (__func__);
+
     int i;
-    for (i = N_DISP-1; i >= 0; i--, valX10 /= 10)
-        disp [i] = SEGMENT_MAP_DIGIT [valX10 % 10];
-    disp [N_DISP-2] &= ~0x80;       // decimal pt
+    if (flip)  {
+        for (i = 0; i < (int)N_DISP; i++, valX10 /= 10)
+            disp [i] = SEGMENT_MAP_DIGIT_F [valX10 % 10];
 
-    // blank leading zeros
-    i = 0;
-    while (SEGMENT_MAP_DIGIT [0] == disp [i])
-        disp [i++] = SEGMENT_OFF;
-
-    for (i = N_DISP-1; i >= 0; i--)  {
-        sprintf (s, " %02x", disp [i]);
-        Serial.print (s);
+        // blank leading zeros
+        i = N_DISP-1;
+        while (SEGMENT_MAP_DIGIT [0] == disp [i])
+            disp [i--] = SEGMENT_OFF;
     }
-    Serial.println ();
+    else  {
+        for (i = N_DISP-1; i >= 0; i--, valX10 /= 10)
+            disp [i] = SEGMENT_MAP_DIGIT [valX10 % 10];
+        disp [N_DISP-2] &= SEGMENT_DEC;       // decimal pt
+
+        // blank leading zeros
+        i = 0;
+        while (SEGMENT_MAP_DIGIT [0] == disp [i])
+            disp [i++] = SEGMENT_OFF;
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -111,6 +129,7 @@ void seg7on (void)
 // -----------------------------------------------------------------------------
 void seg7init (void)
 {
+    Serial.println (__func__);
     for (unsigned i = 0; i < sizeof(pins); i++)  {
         digitalWrite (pins [i], HIGH);
         pinMode      (pins [i], OUTPUT);
