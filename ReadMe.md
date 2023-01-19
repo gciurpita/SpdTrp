@@ -78,7 +78,7 @@ The speed trap needs to be configured for the distance between
 the sensors and the scale.
 These values are stored in EEPROM and only need to be done once and
 can be changed at any time by plugging the USB cable into a laptop
-and entering commands using IDE serial monitor.
+and entering commands using the IDE serial monitor.
 
 The distance in inches is specified with the number followed by 'D'.
 "125D" would set the distance to 12.5 inches.
@@ -86,11 +86,18 @@ Similarly, "87S" would set the scale for 1:87 or HO.
 Both 'd' and 's' can be entered to display the corresponding values.
 A '?' displays the short list of available commands.
 
+Because the USB connector is inconveniently located at the top of the shield,
+the digits are displayed upside down so that the unit
+can be mounted upside down with the USB connector on the bottom.
+Unfortunately, this means the decimal-point isn't used and 
+it must be understood that the last digit is tenths of a MPH.
+
 Once configured, the speed trap is running
 <ul>
  <li> pass something across one of the sensors 
+ <li> the decimal-point for each digit should be moving across the display
  <li> pass something across the other sensor and the speed should be displayed
- <li> after a few seconds the the display clears going dark.
+ <li> after a few seconds the display clears going dark.
 </ul>
 
 ### Installation
@@ -102,16 +109,21 @@ Capacitor C5 is a problem.
 Three conductor wires can be soldered to 3-pin plugs for the IR connectors
 and soldered to the backside of the shield where the 3-pin headers were.
 
-It is unfortunate that the USB cable plugs into the top of the Arduino.
-With the USB cable connected, the Arduino and shield can be mounted
-to the fascia.
-The sensor need to be connected and the USB cable
-connected to a USB wall charger. 
+The unit can be mounted behind the fascia with a cutout for the display.
+the IR detectors need to be mounted facing upward between the ties
+at the configured distance.
+The USB cable is plugged into a USB wall charger for power
+but can be plugged into a laptop to update the code.
+
+The display will flash on power up.
+Triggering either detector causes the decimal-point sweep acros the display
+until the other detector is triggered and the speed reported.
+The display goes dark after a few seconds.
 
 ### Description of Code
 The code is available for viewing or downloaded at
 [https://github.com/gciurpita/SpdTrp](https://github.com/gciurpita/SpdTrp)
-It code is composed of three main files and corresponding .h files.
+The code is composed of three main files and corresponding .h files.
 `pcRead.cpp` has three functions for reading and writing to the EEPROM:
 `eeRead16()`, `eeWrite16()` and `eeDisp()`.
 It also has `pcRead()` which monitors the serial interface to
