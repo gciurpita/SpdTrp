@@ -1,15 +1,11 @@
-const char *Version = "Model RR speed trap - 230123a";
+const char *Version = "Model RR speed trap - 230123d";
 
 #include "pcRead.h"
 #include "seg7disp.h"
 #include "spdTrp.h"
 
-#if 0
-const byte PinSensor [] = { 5, 9 };
-#else
-const byte PinSensor [] = { A1, A2 };
-#endif
-const unsigned Nsensor = sizeof(PinSensor);
+const byte PinSensor [][2] = {{ 5, 9 }, { A1, A2 }};
+const unsigned Nsensor = 2;
 
 const unsigned long WaitPeriod = 3000;
 const unsigned long TrigPeriod = 250;
@@ -75,15 +71,21 @@ trap (void)
     static byte dots;
 
     // check inputs, return Nsensor if none active
-    unsigned  pin;
-    for (pin = 0; pin < Nsensor; pin++)
-        sensorSt [pin] = digitalRead (PinSensor [pin]);
+    for (unsigned n = 0; n < Nsensor; n++)  {
+        sensorSt [n] = 0;
+        for (unsigned i = 0; i < 2; i++)
+            sensorSt [n] |= ! digitalRead (PinSensor [i][n]);
+#if 0
+        if (sensorSt [n])
+            Serial.println (n);
+#endif
+    }
 
     // ---------------------------
     switch (state) {
     case Idle:                  // check for trains entering trap
-        if ((! sensorSt [0]) || (! sensorSt [1]))  {
-            pinExit = ! sensorSt [0] ? 1 : 0;
+        if (sensorSt [0] || sensorSt [1])  {
+            pinExit = sensorSt [0] ? 1 : 0;
             msec0   = msecLst = msec;
             state   = Trig;
             cntTrig = 4 * 30;           // 4 * # seconds
@@ -93,7 +95,7 @@ trap (void)
         break;
 
     case Trig:                  // check for train exiting
-        if (! sensorSt [pinExit])  {
+        if (sensorSt [pinExit])  {
             dispSpd (msec - msec0);
             state = Wait;
             Serial.println (" Wait");
@@ -116,7 +118,7 @@ trap (void)
         break;
 
     case Wait:
-        if ((! sensorSt [0]) || (! sensorSt [1]))
+        if (sensorSt [0] || sensorSt [1])
             msecLst    = msec;
         else if (msec - msecLst >= WaitPeriod)  {   // timer
             state      = Idle;
@@ -131,8 +133,10 @@ int
 checkMode (void)
 {
     int digs = 6;
-    digs |= (LOW == digitalRead (PinSensor [0])) ? 8 : 0;
-    digs |= (LOW == digitalRead (PinSensor [1])) ? 1 : 0;
+    for (unsigned i = 0; i < 2; i++)  {
+        digs |= (LOW == digitalRead (PinSensor [i][0])) ? 8 : 0;
+        digs |= (LOW == digitalRead (PinSensor [i][1])) ? 1 : 0;
+    }
     seg7segs (digs, 0xbf);
 
     return 6 != digs;
@@ -168,8 +172,9 @@ setup (void)
     seg7init ();
     setConversion ();
 
-    for (unsigned n = 0; n < Nsensor; n++)
-        pinMode (PinSensor [n], INPUT_PULLUP);
+    for (unsigned i = 0; i < 2; i++)
+        for (unsigned n = 0; n < Nsensor; n++)
+            pinMode (PinSensor [i][n], INPUT_PULLUP);
 
 #if 0
     for (int i = 1; i <= 0x80; i*=2)  {
