@@ -1,28 +1,39 @@
+<table align=right> <tr><td> Greg Ciurpita, Jan 27 2023 </table>
+
 ## Loco Speed Trap
 
 <img src=https://i5.walmartimages.com/asr/4b1a317d-14a7-4a60-bc2b-5391fe8575e4.7a4267827bfc80a2badfd102734ec542.jpeg height=300 align=right>
 
 A locomotive speed trap reports the speed in scale miles per hour
-with one decimal digit (e.g. 25.4).
-A relatively inexpensive multi-function shield having
-a four digit 7-segment display and electronics for driving it.
-
+with one decimal digit (e.g. 254 is 25.4 scale mph).
+It uses a relatively inexpensive multi-function shield having
+a four digit 7-segment display.
 A variety of optical sensors can be used,
 preferably the reflective type mounted between track ties.
-They need to be soldered to the multi-function shield
-since the shield plug into the connectors on the Arduino.
 
 The distance between sensors and scale as a number (e.g. 87 for HO)
-can be stored in EEPROM to accommodate various installations.
-The configuration can easily be changed via the serial monitor
-of the Arduino IDE or any suitable serial program
-connected via the Arduino USB interface.
+will need to be programmed in EEPROM to accommodate various installations
+which can easily be edited using the serial monitor
+of the Arduino IDE used to program the Arduino.
+A USB-B cable connects the Arduino to PC.
 
 The logic captures a timestamp at either end of the trap and
 computes the speed after capturing the timestamp
 when it exits the trap.
 It ignores further sensor activity as cars repeatedly trip sensors
 until neither sensor becomes active for several seconds.
+
+It displays a sequence of moving decimal points
+to indicate that it is timing the train
+while waiting for the train trip the second sensor.
+It times out after 30 seconds.
+
+The unit is mounted upside down with the USB connector facing down
+to make it convenient to attach a USB cable.
+This means the decimal points on the display
+are at the top of the display and not usable.
+
+<img src=spdTrap.jpg width=100%>
 
 ### Assembly
 The speed trap is composed of
@@ -102,21 +113,23 @@ Once configured, the speed trap is running
 
 ### Installation
 
-Unnecessary components on the multi-function shield will
-get in the way of mounting the Arduino behind the fascia of a layout.
-The headers, sounds, pot and  four switches can be unsoldered
-Capacitor C5 is a problem.
-Three conductor wires can be soldered to 3-pin plugs for the IR connectors
-and soldered to the backside of the shield where the 3-pin headers were.
-
 The unit can be mounted behind the fascia with a cutout for the display.
 the IR detectors need to be mounted facing upward between the ties
 at the configured distance.
 The USB cable is plugged into a USB wall charger for power
 but can be plugged into a laptop to update the code.
 
+Unnecessary components on the multi-function shield will
+get in the way of mounting the Arduino behind the fascia of a layout.
+Headers, sounder, pot switches and larger electrolytic capacitor
+can be unsoldered and removed.
+Three conductor wires for the IR sensors
+can be soldered to the vias
+where the 3-pin plugs for pins 5 and 9 were removed
+through the back of the board to not interfere with the fascia mounting.
+
 The display will flash on power up.
-Triggering either detector causes the decimal-point sweep acros the display
+Triggering either detector causes the decimal-point sweep across the display
 until the other detector is triggered and the speed reported.
 The display goes dark after a few seconds.
 
@@ -183,5 +196,3 @@ flashes all segments of the display to show all segments work.
 
 Of course you are encouraged to customize the code to your liking.
 
-<p align=right>
-Greg Ciurpita, Jan 2023
