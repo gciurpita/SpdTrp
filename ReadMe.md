@@ -33,7 +33,7 @@ to make it convenient to attach a USB cable.
 This means the decimal points on the display
 are at the top of the display and not usable.
 
-<img src=spdTrap.jpg width=100%>
+<img src=Images/spdTrap.jpg width=100%>
 
 ### Assembly
 The speed trap is composed of
